@@ -55,5 +55,22 @@ data/cache/
 *.db
 *.sqlite
 
+# Archivos DBF (NO subir a git - son pesados y contienen datos del cliente)
+DbfRed*/
+*.DBF
+*.dbf
+*.CDX
+*.cdx
+*.FPT
+*.fpt
+*.BAK
+*.bak
+*.TBK
+*.tbk
+*.dbc
+*.dct
+*.DCX
+*.dcx
+
 # NSSM y herramientas descargadas por instalar_servicio.bat
 tools/
