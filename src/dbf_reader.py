@@ -17,14 +17,6 @@ class DBFReader:
     """Lector de archivos DBF con manejo de errores y validaciones"""
     
     def __init__(self, dbf_path: Optional[str] = None):
-        """
-        Inicializa el lector de DBF.
-
-        Args:
-            dbf_path: Ruta concreta a los archivos DBF. Si no se provee, se llama a
-                      Config.get_latest_dbf_path() para resolver automáticamente la
-                      subcarpeta DbfRed más reciente dentro de DBF_BASE_PATH.
-        """
         self.encoding = Config.DBF_ENCODING
         resolved = dbf_path or Config.get_latest_dbf_path()
         self.dbf_path = Path(resolved)
@@ -35,13 +27,6 @@ class DBFReader:
         logger.info(f"DBFReader inicializado con ruta: {self.dbf_path}")
 
     def refresh_path(self) -> bool:
-        """
-        Resuelve nuevamente la carpeta DbfRed más reciente y actualiza self.dbf_path
-        si ha cambiado (porque el servidor empujó una carpeta nueva).
-
-        Returns:
-            True si la ruta cambió (hay nueva carpeta), False si es la misma.
-        """
         new_path = Path(Config.get_latest_dbf_path())
         if new_path != self.dbf_path:
             logger.info(f"Nueva carpeta DBF detectada: {self.dbf_path} → {new_path}")

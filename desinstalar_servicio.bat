@@ -1,8 +1,4 @@
 @echo off
-:: ============================================================
-::  DESINSTALADOR DEL SERVICIO - API Centro Japón
-::  Ejecutar como ADMINISTRADOR
-:: ============================================================
 title Desinstalador Servicio - API Centro Japon
 cd /d "%~dp0"
 
@@ -18,8 +14,6 @@ set NSSM=%~dp0tools\nssm\nssm.exe
 echo Deteniendo y eliminando servicio %SERVICE_NAME%...
 "%NSSM%" stop %SERVICE_NAME% >nul 2>&1
 "%NSSM%" remove %SERVICE_NAME% confirm
-
-:: Eliminar regla del firewall
 netsh advfirewall firewall delete rule name="CentroJaponAPI" >nul 2>&1
 
 echo.
