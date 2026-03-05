@@ -120,7 +120,7 @@ echo   El servicio necesita correr bajo tu usuario para acceder
 echo   a rutas de red. Usa el usuario con el que inicias sesion.
 echo ============================================================
 echo.
-set /p SVC_USER="   Usuario (ej: Administrador): "
+set /p SVC_USER="   Usuario (ej: Administrador o dominio\usuario): "
 set /p SVC_PASS="   Contrasena: "
 echo.
 
@@ -130,7 +130,7 @@ echo [..] Configurando servicio...
 "%NSSM%" install %SERVICE_NAME% "%PYTHON_EXE%" "%APP_SCRIPT%"
 "%NSSM%" set %SERVICE_NAME% DisplayName "API Centro Japon - Inventario"
 "%NSSM%" set %SERVICE_NAME% AppDirectory "%APP_DIR%"
-"%NSSM%" set %SERVICE_NAME% ObjectName ".\%SVC_USER%" "%SVC_PASS%"
+"%NSSM%" set %SERVICE_NAME% ObjectName "%SVC_USER%" "%SVC_PASS%"
 "%NSSM%" set %SERVICE_NAME% Start SERVICE_AUTO_START
 "%NSSM%" set %SERVICE_NAME% AppRestartDelay 10000
 "%NSSM%" set %SERVICE_NAME% AppStdout "%APP_DIR%\logs\service_out.log"
