@@ -128,7 +128,7 @@ echo [..] Configurando servicio...
 "%NSSM%" stop %SERVICE_NAME% >nul 2>&1
 "%NSSM%" remove %SERVICE_NAME% confirm >nul 2>&1
 "%NSSM%" install %SERVICE_NAME% "%PYTHON_EXE%"
-"%NSSM%" set %SERVICE_NAME% AppParameters "%APP_SCRIPT%"
+"%NSSM%" set %SERVICE_NAME% AppParameters "\"%APP_SCRIPT%\""
 "%NSSM%" set %SERVICE_NAME% DisplayName "API Centro Japon - Inventario"
 "%NSSM%" set %SERVICE_NAME% AppDirectory "%APP_DIR%"
 "%NSSM%" set %SERVICE_NAME% ObjectName "%SVC_USER%" "%SVC_PASS%"
