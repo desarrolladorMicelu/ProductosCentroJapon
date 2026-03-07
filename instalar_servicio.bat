@@ -143,7 +143,7 @@ echo [OK] Servicio registrado
 echo.
 echo [..] Abriendo puerto 5000...
 netsh advfirewall firewall delete rule name="CentroJaponAPI" >nul 2>&1
-netsh advfirewall firewall add rule name="CentroJaponAPI" dir=in action=allow protocol=TCP localport=5000
+netsh advfirewall firewall add rule name="CentroJaponAPI" dir=in action=allow protocol=TCP localport=8090
 echo [OK] Puerto 5000 abierto
 
 echo.
