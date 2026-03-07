@@ -6,6 +6,7 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    API_KEY = os.getenv('API_KEY', '')
     FLASK_ENV = os.getenv('FLASK_ENV', 'production')
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 

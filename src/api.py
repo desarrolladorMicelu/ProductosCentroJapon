@@ -1,8 +1,12 @@
 """
 API RESTful para exponer datos de inventario y precios
 """
+import secrets
+from functools import wraps
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from datetime import datetime
 from src.config import Config
 from src.logger import setup_logger
@@ -28,7 +32,44 @@ def create_app() -> Flask:
     else:
         origins = [origin.strip() for origin in Config.ALLOWED_ORIGINS.split(',')]
         CORS(app, origins=origins)
-    
+
+    # Rate Limiter: 200 requests/minuto por IP (global)
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per minute"],
+        storage_uri="memory://"
+    )
+
+    # Decorador de autenticacion por API Key
+    def require_api_key(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            key = request.headers.get('X-API-Key') or request.args.get('api_key')
+            if not key:
+                logger.warning(f"Acceso sin API key desde {request.remote_addr} [{request.method} {request.path}]")
+                return jsonify({
+                    'success': False,
+                    'error': 'API key requerida. Incluye el header: X-API-Key'
+                }), 401
+            if not Config.API_KEY:
+                logger.error("API_KEY no esta configurada en .env")
+                return jsonify({'success': False, 'error': 'Servicio no configurado'}), 503
+            if not secrets.compare_digest(key.encode('utf-8'), Config.API_KEY.encode('utf-8')):
+                logger.warning(f"API key invalida desde {request.remote_addr} [{request.method} {request.path}]")
+                return jsonify({'success': False, 'error': 'API key invalida'}), 403
+            return f(*args, **kwargs)
+        return decorated
+
+    # Headers de seguridad en todas las respuestas
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        return response
+
     # Inicializar directorios
     Config.init_app()
     
@@ -83,6 +124,8 @@ def create_app() -> Flask:
             }), 503
     
     @app.route('/api/inventario', methods=['GET'])
+    @limiter.limit("60 per minute")
+    @require_api_key
     def get_inventario():
         """
         Obtiene el inventario completo con disponibilidad y precios
@@ -134,6 +177,7 @@ def create_app() -> Flask:
             }), 500
     
     @app.route('/api/inventario/<codigo>', methods=['GET'])
+    @require_api_key
     def get_inventario_producto(codigo: str):
         """
         Obtiene el inventario de un producto específico
@@ -169,6 +213,7 @@ def create_app() -> Flask:
             }), 500
     
     @app.route('/api/productos', methods=['GET'])
+    @require_api_key
     def get_productos():
         """
         Obtiene la lista de productos
@@ -208,6 +253,7 @@ def create_app() -> Flask:
             }), 500
     
     @app.route('/api/precios', methods=['GET'])
+    @require_api_key
     def get_precios():
         """
         Obtiene los precios de venta
@@ -245,6 +291,8 @@ def create_app() -> Flask:
             }), 500
     
     @app.route('/api/cache/clear', methods=['POST'])
+    @limiter.limit("10 per minute")
+    @require_api_key
     def clear_cache():
         """Limpia el caché de la aplicación"""
         try:
@@ -266,6 +314,8 @@ def create_app() -> Flask:
             }), 500
     
     @app.route('/api/cache/refresh', methods=['POST'])
+    @limiter.limit("10 per minute")
+    @require_api_key
     def refresh_cache():
         """
         Fuerza una actualización del caché en background
@@ -304,6 +354,15 @@ def create_app() -> Flask:
     
     # ==================== MANEJO DE ERRORES ====================
     
+    @app.errorhandler(429)
+    def ratelimit_error(e):
+        logger.warning(f"Rate limit excedido desde {request.remote_addr}")
+        return jsonify({
+            'success': False,
+            'error': 'Demasiadas solicitudes. Intenta en unos segundos.',
+            'timestamp': datetime.now().isoformat()
+        }), 429
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
