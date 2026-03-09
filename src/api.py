@@ -143,15 +143,12 @@ def create_app() -> Flask:
             cache_key = 'inventario_completo'
             inventario = cache_manager.get(cache_key, max_age=10800)  # 3 horas como fallback
             
-            # Si no hay caché, retornar mensaje indicando que se está cargando
+            # Si no hay caché, leer directamente del DBF como respaldo
             if inventario is None:
-                logger.warning("Caché vacío, se necesita pre-carga")
-                return jsonify({
-                    'success': False,
-                    'error': 'Datos en proceso de carga. Intente nuevamente en unos segundos.',
-                    'timestamp': datetime.now().isoformat(),
-                    'message': 'El sistema está sincronizando datos. Por favor espere.'
-                }), 503
+                logger.warning("Caché vacío, leyendo directamente desde DBF...")
+                inventario = dbf_reader.get_inventario_con_precios()
+                cache_manager.set(cache_key, inventario)
+                logger.info(f"Caché reconstruido: {len(inventario)} productos")
             
             # Filtrar solo disponibles si se solicita
             if disponible_solo:

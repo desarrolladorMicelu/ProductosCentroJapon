@@ -34,8 +34,8 @@ def preload_cache():
             logger.info(f"✓ Pre-carga completada en {(datetime.now() - inicio).total_seconds():.2f}s")
             logger.info("  El scheduler verificará actualizaciones cada 30 minutos")
             logger.info("=" * 80)
-            return None  # No necesitamos el dbf_reader si hay caché
-        
+            return DBFReader()  # El scheduler siempre necesita el reader para renovar caché
+
         logger.info("Caché no encontrado, cargando desde DBF...")
         
         # Crear instancia del lector DBF

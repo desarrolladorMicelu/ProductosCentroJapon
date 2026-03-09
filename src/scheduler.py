@@ -64,7 +64,8 @@ class TaskScheduler:
                 logger.info(f"Nueva carpeta DBF: {self.dbf_reader.dbf_path}")
                 self.last_modification_times.clear()
 
-            if not (folder_changed or self._check_files_modified()):
+            cache_missing = cache_manager.get('inventario_completo') is None
+            if not (folder_changed or self._check_files_modified() or cache_missing):
                 return
 
             inicio = datetime.now()
