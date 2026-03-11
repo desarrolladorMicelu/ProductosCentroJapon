@@ -297,6 +297,7 @@ class DBFReader:
             resultado = []
             for cod_producto, producto in productos_dict.items():
                 resultado.append({
+                    # Campos principales usados por integraciones existentes
                     'codigo': cod_producto,
                     'descripcion': producto.get('DESCRIPCIO', ''),
                     'referencia': producto.get('REFERENCIA', ''),
@@ -306,8 +307,41 @@ class DBFReader:
                     'precio_venta_1': producto.get('VENTA1', 0),
                     'precio_venta_2': producto.get('VENTA2', 0),
                     'precio_venta_3': producto.get('VENTA3', 0),
+                    'precio_venta_4': producto.get('VENTA4', 0),
+                    'precio_venta_5': producto.get('VENTA5', 0),
                     'iva': producto.get('IVA', 0),
+                    'inc': producto.get('INC', 0),
                     'utilidad_porcentaje': producto.get('UTILIDAD', 0),
+                    'ret_fuente': producto.get('RET_FUENTE', ''),
+
+                    # Campos adicionales del maestro de productos
+                    'cod_largo': producto.get('COD_LARGO', ''),
+                    'cod_invent': producto.get('COD_INVENT', ''),
+                    'factor': producto.get('FACTOR', 0),
+                    'sugerido': producto.get('SUGERIDO', 0),
+                    'rotacion': producto.get('ROTACION', 0),
+                    'divisor': producto.get('DIVISOR', 0),
+                    'medida': producto.get('MEDIDA', ''),
+                    'atributo1': producto.get('ATRIBUTO1', ''),
+                    'atributo2': producto.get('ATRIBUTO2', ''),
+                    'decimal': producto.get('DECIMAL', False),
+                    'touch': producto.get('TOUCH', False),
+                    'und_empaque': producto.get('UND_EMPAQU', 0),
+                    'porcen1': producto.get('PORCEN1', 0),
+                    'porcen2': producto.get('PORCEN2', 0),
+                    'porcen3': producto.get('PORCEN3', 0),
+                    'porcen4': producto.get('PORCEN4', 0),
+                    'porcen5': producto.get('PORCEN5', 0),
+                    'impuesto': producto.get('IMPUESTO', 0),
+                    'tipo_impto': producto.get('TIPO_IMPTO', 0),
+                    'inventario': producto.get('INVENTARIO', False),
+                    'gravado': producto.get('GRAVADO', 0),
+                    'obligatori': producto.get('OBLIGATORI', False),
+                    'biencubier': producto.get('BIENCUBIER', False),
+                    'compuesto': producto.get('COMPUESTO', False),
+                    'fecha_ingreso': producto.get('FECHA_ING', ''),
+                    'categoria': producto.get('CATEGORIA', 0),
+                    'es_gratuito': producto.get('ESGRATUITO', False),
                     'activo': True
                 })
             
