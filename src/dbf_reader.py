@@ -27,11 +27,40 @@ class DBFReader:
         logger.info(f"DBFReader inicializado con ruta: {self.dbf_path}")
 
     def refresh_path(self) -> bool:
+        """
+        Verifica si hay una carpeta DBF más reciente y cambia a ella
+        SOLO si los archivos críticos existen y están completos
+        
+        Returns:
+            True si cambió a una carpeta nueva, False si no
+        """
         new_path = Path(Config.get_latest_dbf_path())
+        
         if new_path != self.dbf_path:
-            logger.info(f"Nueva carpeta DBF detectada: {self.dbf_path} → {new_path}")
-            self.dbf_path = new_path
-            return True
+            # Verificar que los archivos críticos existen y tienen tamaño > 0
+            producto_file = new_path / 'Producto.DBF'
+            movmes_file = new_path / 'MovMes.DBF'
+            mes_actual = datetime.now().month
+            movmes_mes = new_path / f'MovMes{mes_actual:02d}.DBF'
+            
+            # Verificar existencia y tamaño
+            archivos_ok = (
+                producto_file.exists() and producto_file.stat().st_size > 1000 and
+                (movmes_file.exists() and movmes_file.stat().st_size > 1000 or
+                 movmes_mes.exists() and movmes_mes.stat().st_size > 1000)
+            )
+            
+            if archivos_ok:
+                logger.info(f"✓ Nueva carpeta DBF lista: {new_path}")
+                logger.info(f"  Cambiando de: {self.dbf_path}")
+                self.dbf_path = new_path
+                return True
+            else:
+                logger.warning(f"⚠ Nueva carpeta detectada pero archivos NO están listos: {new_path}")
+                logger.info(f"  Manteniendo carpeta actual: {self.dbf_path}")
+                logger.info(f"  (Los archivos se están copiando, se intentará en próxima sincronización)")
+                return False
+        
         return False
     
     def _sanitize_value(self, value: Any) -> Any:

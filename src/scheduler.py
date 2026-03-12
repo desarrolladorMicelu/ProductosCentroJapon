@@ -71,6 +71,8 @@ class TaskScheduler:
             inicio = datetime.now()
             inventario = self.dbf_reader.get_inventario_con_precios()
             cache_manager.set('inventario_completo', inventario)
+            
+            # Solo invalidar otros cachés si la actualización fue exitosa
             cache_manager.invalidate('productos_True')
             cache_manager.invalidate('productos_False')
             cache_manager.invalidate('precios')
@@ -79,6 +81,8 @@ class TaskScheduler:
 
         except Exception as e:
             logger.error(f"Error en sincronizacion: {e}")
+            # NO borrar el caché cuando falla - mantener datos anteriores
+            logger.info("Manteniendo caché anterior debido al error")
     
     def start(self):
         if self.is_running:
