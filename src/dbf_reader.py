@@ -200,11 +200,11 @@ class DBFReader:
                 
                 producto = productos_dict.get(cod_producto, {})
                 
-                # Calcular disponibilidad actual
+                # Usar ACTUALMES que ya tiene el stock actual calculado
+                disponible = mov.get('ACTUALMES', 0) or 0
                 inicial = mov.get('INICIALMES', 0) or 0
                 entradas = mov.get('ENTRADASME', 0) or 0
                 salidas = mov.get('SALIDASMES', 0) or 0
-                disponible = inicial + entradas - salidas
                 
                 # Solo incluir productos con inventario o activos
                 if disponible > 0 or producto.get('ACTIVO'):
@@ -308,13 +308,12 @@ class DBFReader:
                 for mov in movimientos:
                     cod = mov.get('COD_PRODUC', '').strip()
                     if cod and cod in productos_dict:
-                        inicial = mov.get('INICIALMES', 0) or 0
-                        entradas = mov.get('ENTRADASME', 0) or 0
-                        salidas = mov.get('SALIDASMES', 0) or 0
+                        # Usar ACTUALMES que ya tiene el stock actual calculado
+                        actual = mov.get('ACTUALMES', 0) or 0
                         
                         if cod not in disponibilidad:
                             disponibilidad[cod] = 0
-                        disponibilidad[cod] += (inicial + entradas - salidas)
+                        disponibilidad[cod] += actual
                 
                 logger.info(f"Productos con movimientos: {len(disponibilidad)}")
                 
