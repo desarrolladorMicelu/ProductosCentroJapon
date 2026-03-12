@@ -33,13 +33,13 @@ class Config:
         if base:
             base_path = Path(base)
             if base_path.exists():
-                dbf_folders = sorted(
-                    [f for f in base_path.iterdir() if f.is_dir() and f.name.startswith('DbfRed')],
-                    key=lambda f: f.name,
-                    reverse=True
-                )
+                dbf_folders = [
+                    f for f in base_path.iterdir() 
+                    if f.is_dir() and f.name.startswith('DbfRed')
+                ]
                 if dbf_folders:
-                    latest_outer = dbf_folders[0]
+                    # Ordenar por fecha de modificación (más reciente primero)
+                    latest_outer = max(dbf_folders, key=lambda f: f.stat().st_mtime)
                     latest_inner = latest_outer / latest_outer.name
                     resolved = latest_inner if latest_inner.exists() else latest_outer
                     return str(resolved)
