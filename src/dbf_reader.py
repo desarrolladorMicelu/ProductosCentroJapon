@@ -308,6 +308,7 @@ class DBFReader:
                 movimientos = self._read_dbf_file(archivo_movmes)
                 logger.info(f"Registros de movimientos leídos: {len(movimientos)}")
                 
+                productos_con_stock = 0
                 for mov in movimientos:
                     cod = mov.get('COD_PRODUC', '').strip()
                     if cod and cod in productos_dict:
@@ -322,6 +323,11 @@ class DBFReader:
                         if cod not in disponibilidad:
                             disponibilidad[cod] = 0
                         disponibilidad[cod] += actual
+                        
+                        if actual > 0:
+                            productos_con_stock += 1
+                
+                logger.info(f"Productos con stock > 0: {productos_con_stock}")
                 
                 logger.info(f"Productos con movimientos: {len(disponibilidad)}")
                 
