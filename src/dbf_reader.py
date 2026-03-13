@@ -179,6 +179,7 @@ class DBFReader:
     def get_inventario(self) -> List[Dict[str, Any]]:
         """
         Obtiene el inventario actual desde MovMes
+        CORREGIDO: Calcula stock correctamente (ACTUALMES siempre es None)
         
         Returns:
             Lista de inventario con disponibilidad
@@ -200,14 +201,12 @@ class DBFReader:
                 
                 producto = productos_dict.get(cod_producto, {})
                 
-                # Calcular stock: ACTUALMES si existe, sino calcular manualmente
-                disponible = mov.get('ACTUALMES')
+                # CALCULAR STOCK: inicial + entradas - salidas
+                # ACTUALMES siempre es None en esta BD
                 inicial = mov.get('INICIALMES', 0) or 0
                 entradas = mov.get('ENTRADASME', 0) or 0
                 salidas = mov.get('SALIDASMES', 0) or 0
-                
-                if disponible is None:
-                    disponible = inicial + entradas - salidas
+                disponible = inicial + entradas - salidas
                 
                 # Solo incluir productos con inventario o activos
                 if disponible > 0 or producto.get('ACTIVO'):
@@ -272,7 +271,7 @@ class DBFReader:
     def get_inventario_con_precios(self) -> List[Dict[str, Any]]:
         """
         Obtiene inventario combinado con precios (endpoint principal)
-        OPTIMIZADO: Solo lee el mes actual de MovMes
+        CORREGIDO: Usa MovMes.DBF y calcula stock correctamente
         
         Returns:
             Lista completa de inventario con disponibilidad y precios
@@ -289,19 +288,11 @@ class DBFReader:
             
             productos_dict = {p['COD_PRODUC']: p for p in productos if p.get('ACTIVO')}
             
-            # Determinar archivo MovMes del mes actual
-            mes_actual = datetime.now().month
-            archivo_movmes = f'MovMes{mes_actual:02d}.DBF'
+            # SIEMPRE usar MovMes.DBF que tiene la estructura completa
+            archivo_movmes = 'MovMes.DBF'
+            logger.info(f"Leyendo inventario desde: {archivo_movmes}")
             
-            logger.info(f"Leyendo inventario del mes actual: {archivo_movmes}")
-            
-            # Verificar si existe el archivo del mes
-            movmes_path = self.dbf_path / archivo_movmes
-            if not movmes_path.exists():
-                logger.warning(f"Archivo {archivo_movmes} no encontrado, usando MovMes.DBF")
-                archivo_movmes = 'MovMes.DBF'
-            
-            # Diccionario para acumular disponibilidad por producto
+            # Diccionario para acumular disponibilidad por producto y centro de costo
             disponibilidad = {}
             
             try:
@@ -312,14 +303,14 @@ class DBFReader:
                 for mov in movimientos:
                     cod = mov.get('COD_PRODUC', '').strip()
                     if cod and cod in productos_dict:
-                        # Calcular stock: ACTUALMES si existe, sino calcular manualmente
-                        actual = mov.get('ACTUALMES')
-                        if actual is None:
-                            inicial = mov.get('INICIALMES', 0) or 0
-                            entradas = mov.get('ENTRADASME', 0) or 0
-                            salidas = mov.get('SALIDASMES', 0) or 0
-                            actual = inicial + entradas - salidas
+                        # CALCULAR STOCK: inicial + entradas - salidas
+                        # ACTUALMES siempre es None, así que lo calculamos
+                        inicial = mov.get('INICIALMES', 0) or 0
+                        entradas = mov.get('ENTRADASME', 0) or 0
+                        salidas = mov.get('SALIDASMES', 0) or 0
+                        actual = inicial + entradas - salidas
                         
+                        # Acumular por producto (puede haber múltiples centros de costo)
                         if cod not in disponibilidad:
                             disponibilidad[cod] = 0
                         disponibilidad[cod] += actual
@@ -328,8 +319,7 @@ class DBFReader:
                             productos_con_stock += 1
                 
                 logger.info(f"Productos con stock > 0: {productos_con_stock}")
-                
-                logger.info(f"Productos con movimientos: {len(disponibilidad)}")
+                logger.info(f"Productos únicos con movimientos: {len(disponibilidad)}")
                 
             except Exception as e:
                 logger.error(f"Error leyendo {archivo_movmes}: {e}")
