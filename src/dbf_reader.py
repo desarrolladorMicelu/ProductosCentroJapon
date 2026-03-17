@@ -325,15 +325,24 @@ class DBFReader:
                 logger.error(f"Error leyendo {archivo_movmes}: {e}")
                 # Continuar sin movimientos
             
-            # Construir resultado
+            # Construir resultado - SOLO productos con stock disponible > 0
             resultado = []
+            productos_sin_stock = 0
+            
             for cod_producto, producto in productos_dict.items():
+                stock_disponible = disponibilidad.get(cod_producto, 0)
+                
+                # Filtrar: solo incluir productos con stock > 0
+                if stock_disponible <= 0:
+                    productos_sin_stock += 1
+                    continue
+                
                 resultado.append({
                     # Campos principales usados por integraciones existentes
                     'codigo': cod_producto,
                     'descripcion': producto.get('DESCRIPCIO', ''),
                     'referencia': producto.get('REFERENCIA', ''),
-                    'disponible': disponibilidad.get(cod_producto, 0),
+                    'disponible': stock_disponible,
                     'costo': producto.get('COSTO', 0),
                     'costo_promedio': producto.get('COSTO_PROM', 0),
                     'precio_venta_1': producto.get('VENTA1', 0),
@@ -377,7 +386,8 @@ class DBFReader:
                     'activo': True
                 })
             
-            logger.info(f"Obtenido inventario completo de {len(resultado)} productos")
+            logger.info(f"Obtenido inventario de {len(resultado)} productos con stock > 0")
+            logger.info(f"Excluidos {productos_sin_stock} productos sin stock")
             return resultado
             
         except Exception as e:
